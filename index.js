@@ -11,6 +11,9 @@ class MicroMice {
     }, this.ipc.config);
 
     this.ipc.serve(() => {
+      this.trigger = this.ipc.server.emit;
+      this.broadcast = this.ipc.server.broadcast;
+
       this._bindEvents();
       this.start ? this.start() : _.noop;
     });
