@@ -1,0 +1,15 @@
+{
+  "name": "micromice",
+  "version": "0.0.1",
+  "description": "a microservice framework base on node-ipc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Amit Choukroun",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "node-ipc": "^8.10.3"
+  }
+}
