@@ -26,7 +26,7 @@ class MicroMice {
     if(!_.isObjectLike(events)) return;
 
     _.forEach(events, (value, key) => {
-      this.ipc.server.on(key, value);
+      this.ipc.server.on(key, value.bind(this));
     });
   }
 
