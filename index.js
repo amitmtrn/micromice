@@ -18,7 +18,7 @@ class MicroMice {
       this.start ? this.start() : _.noop;
     });
 
-    this._bindPairs();
+    this._bindServices();
     this.ipc.server.start();
   }
 
@@ -32,12 +32,12 @@ class MicroMice {
     });
   }
 
-  _bindPairs() {
-    const pairs = this.pairs ? this.pairs() : null;
+  _bindServices() {
+    const services = this.services ? this.services() : null;
 
-    if(!_.isPlainObject(pairs)) return;
+    if(!_.isPlainObject(services)) return;
 
-    _.forEach(pairs, (value, key) => {
+    _.forEach(services, (value, key) => {
       this.ipc.connectTo(key, () => {this[key] = this.ipc.of[key]});
     });
 
