@@ -38,7 +38,22 @@ class MicroMice {
     if(!_.isPlainObject(services)) return;
 
     _.forEach(services, (value, key) => {
-      this.ipc.connectTo(key, () => {this[key] = this.ipc.of[key]});
+      this.ipc.connectTo(key, () => {
+        this[key] = this.ipc.of[key];
+
+        this[key].once = (eventName, callback) => {
+          this.ipc.of[key].on(eventName, function done(data) {
+            this.ipc.of[key].off(eventName, done);
+            callback(data);
+          });
+        };
+
+        this[key].request = (eventName, callback) => {
+          this[key].once(eventName, callback);
+          this[key].emit(eventName);
+        };
+
+      });
     });
 
   }

@@ -71,7 +71,6 @@ not yet implemented
 tasks
 * tests
 * add tcp/udp/tls support
-* create once for services events
 
 ## License
 
