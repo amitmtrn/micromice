@@ -1,20 +1,20 @@
 const MicroMice = require('../index');
 
-class SimpleUnixSocketService extends MicroMice {
+class SimpleTCPSocketService extends MicroMice {
   constructor() {
     super({id: 'simpleTCPSocketService'});
 
-    // emit test event to simpleUnixSocketService every second
+    // emit test event to simpleTCPSocketService every second
     setTimeout(function emitTest(service) {
       service.emit('test', {someData:42, time: new Date()});
 
       setTimeout(emitTest, 1000, service);
-    }, 1000, this.simpleUnixSocketService2);
+    }, 1000, this.simpleTCPSocketService2);
   }
 
   services() {
     return {
-      simpleUnixSocketService2: {
+      simpleTCPSocketService2: {
         host: 'localhost'
       }
     };
@@ -25,4 +25,4 @@ class SimpleUnixSocketService extends MicroMice {
   }
 }
 
-module.exports = new SimpleUnixSocketService();
+module.exports = new SimpleTCPSocketService();

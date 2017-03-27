@@ -1,6 +1,6 @@
 const MicroMice = require('../index');
 
-class SimpleUnixSocketService extends MicroMice {
+class SimpleTCPSocketService extends MicroMice {
   constructor() {
     super({id: 'simpleTCPSocketService2', host: 'localhost'});
   }
@@ -21,4 +21,4 @@ class SimpleUnixSocketService extends MicroMice {
   }
 }
 
-module.exports = new SimpleUnixSocketService();
+module.exports = new SimpleTCPSocketService();
