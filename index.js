@@ -48,9 +48,9 @@ class MicroMice {
           });
         };
 
-        this[key].request = (eventName, callback) => {
+        this[key].request = (eventName, eventData, callback) => {
           this[key].once(eventName, callback);
-          this[key].emit(eventName);
+          this[key].emit(eventName, eventData);
         };
 
       });
