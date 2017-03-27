@@ -1,10 +1,19 @@
 {
   "name": "micromice",
-  "version": "0.0.4",
-  "description": "a microservice framework base on node-ipc",
+  "version": "0.0.5",
+  "description": "A lightweight framework for micro services in node js",
+  "keywords": ["microservices", "service", "micro service", "ipc"],
+  "homepage": "https://github.com/amitmtrn/micromice",
+  "bugs": {
+    "url": "https://github.com/amitmtrn/micromice/issues"
+  },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amitmtrn/micromice.git"
   },
   "author": "Amit Choukroun",
   "license": "MIT",

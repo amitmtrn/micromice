@@ -43,6 +43,7 @@ module.exports = new SomeService();
 ## Installation
 
 ```bash
+npm init
 npm install micromice --save
 ```
 

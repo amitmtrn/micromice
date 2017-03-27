@@ -1,16 +1,40 @@
 const ipc = require('node-ipc');
 const _ = require('lodash');
 
+function bindClient(key) {
+
+  this[key] = this.ipc.of[key];
+
+  /////////////////////////
+  // extra client events //
+  /////////////////////////
+
+  this[key].once = (eventName, callback) => {
+    this.ipc.of[key].on(eventName, function done(data) {
+      this.ipc.of[key].off(eventName, done);
+      callback(data);
+    });
+  };
+
+  this[key].request = (eventName, eventData, callback) => {
+    this[key].once(eventName, callback);
+    this[key].emit(eventName, eventData);
+  };
+}
+
+
 class MicroMice {
   constructor(config) {
     this.ipc = new ipc.IPC();
-
     this.ipc.config = _.defaults(config, {
       id: _.uniqueId('service'),
-      retry: 1500
+      retry: 1500,
+      silent: true
     }, this.ipc.config);
 
-    this.ipc.serve(() => {
+    const serve = config.host ? this.ipc.serveNet.bind(this.ipc) : this.ipc.serve.bind(this.ipc);
+
+    serve(() => {
       this.emit = this.ipc.server.emit.bind(this.ipc.server);
       this.broadcast = this.ipc.server.broadcast.bind(this.ipc.server);
 
@@ -35,25 +59,17 @@ class MicroMice {
   _bindServices() {
     const services = this.services ? this.services() : null;
 
-    if(!_.isPlainObject(services)) return;
+    if(!_.isPlainObject(services) && !_.isArray(services)) return;
 
     _.forEach(services, (value, key) => {
-      this.ipc.connectTo(key, () => {
-        this[key] = this.ipc.of[key];
 
-        this[key].once = (eventName, callback) => {
-          this.ipc.of[key].on(eventName, function done(data) {
-            this.ipc.of[key].off(eventName, done);
-            callback(data);
-          });
-        };
+      if(_.isPlainObject(value))
+        return this.ipc.connectToNet(key, value.host, value.port, bindClient.bind(this, key));
 
-        this[key].request = (eventName, eventData, callback) => {
-          this[key].once(eventName, callback);
-          this[key].emit(eventName, eventData);
-        };
+      if(_.isArray(services))
+        return this.ipc.connectTo(value, bindClient.bind(this, value));
 
-      });
+      return this.ipc.connectTo(key, bindClient.bind(this, key));
     });
 
   }
