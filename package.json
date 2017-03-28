@@ -1,6 +1,6 @@
 {
   "name": "micromice",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A lightweight framework for micro services in node js",
   "keywords": ["microservices", "service", "micro service", "ipc"],
   "homepage": "https://github.com/amitmtrn/micromice",

@@ -13,7 +13,7 @@ function bindClient(key) {
     this.ipc.of[key].on(eventName, function done(data) {
       this.ipc.of[key].off(eventName, done);
       callback(data);
-    });
+    }.bind(this));
   };
 
   this[key].request = (eventName, eventData, callback) => {
