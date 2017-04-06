@@ -1,8 +1,13 @@
 {
   "name": "micromice",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A lightweight framework for micro services in node js",
-  "keywords": ["microservices", "service", "micro service", "ipc"],
+  "keywords": [
+    "microservices",
+    "service",
+    "micro service",
+    "ipc"
+  ],
   "homepage": "https://github.com/amitmtrn/micromice",
   "bugs": {
     "url": "https://github.com/amitmtrn/micromice/issues"
