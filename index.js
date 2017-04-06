@@ -18,6 +18,7 @@ function bindClient(key) {
 
   this[key].request = (eventName, eventData, callback) => {
     let done = _.noop;
+    let action = _.once(callback);
     const timeout = setTimeout(() => {
       this[key].off(command, done);
 
