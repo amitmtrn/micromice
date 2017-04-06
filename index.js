@@ -27,7 +27,7 @@ function bindClient(key) {
 
     done = (data) => {
       clearTimeout(timeout);
-      callback(data);
+      action(data);
     };
 
     this[key].once(eventName, done);
