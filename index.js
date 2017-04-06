@@ -17,7 +17,19 @@ function bindClient(key) {
   };
 
   this[key].request = (eventName, eventData, callback) => {
-    this[key].once(eventName, callback);
+    let done = _.noop;
+    const timeout = setTimeout(() => {
+      this[key].off(command, done);
+
+      callback(null, new Error('[' + command + '][TIMEOUT]'));
+    }, this.config.timeout);
+
+    done = (data) => {
+      clearTimeout(timeout);
+      callback(data);
+    };
+
+    this[key].once(eventName, done);
     this[key].emit(eventName, eventData);
   };
 }
@@ -25,6 +37,7 @@ function bindClient(key) {
 
 class MicroMice {
   constructor(config) {
+    this.config = _.defaults(config, { timeout: 2000 });
     this.ipc = new ipc.IPC();
     this.ipc.config = _.defaults(config, {
       id: _.uniqueId('service'),
