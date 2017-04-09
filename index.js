@@ -75,11 +75,11 @@ class MicroMice {
         const __requestID = eventData.__requestID;
 
         if(__requestID) { // is a request
-          value(eventData.data, socket, (data) => {
+          value.call(this, eventData.data, socket, (data) => {
             this.emit(socket, key, {data, __requestID});
           });
         } else {
-          value(eventData, socket);
+          value.call(this, eventData, socket);
         }
       });
     });
