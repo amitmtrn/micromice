@@ -19,19 +19,24 @@ function bindClient(key) {
   this[key].request = (eventName, eventData, callback) => {
     let done = _.noop;
     let action = _.once(callback);
+    const requestID = _.uniqueId(eventName);
     const timeout = setTimeout(() => {
       this[key].off(eventName, done);
 
       callback(null, new Error('[' + eventName + '][TIMEOUT]'));
     }, this.config.timeout);
 
-    done = (data) => {
+    done = ({data, __requestID}) => {
+      if(__requestID !== requestID)
+        return;
+
+      this[key].off(eventName, done);
       clearTimeout(timeout);
       action(data);
     };
 
-    this[key].once(eventName, done);
-    this[key].emit(eventName, eventData);
+    this[key].on(eventName, done);
+    this[key].emit(eventName, {data: eventData, __requestID: requestID});
   };
 }
 
@@ -66,7 +71,17 @@ class MicroMice {
     if(!_.isPlainObject(events)) return;
 
     _.forEach(events, (value, key) => {
-      this.ipc.server.on(key, value.bind(this));
+      this.ipc.server.on(key, (eventData, socket) => {
+        const __requestID = eventData.__requestID;
+
+        if(__requestID) { // is a request
+          value(eventData.data, socket, (data) => {
+            this.emit(socket, key, {data, __requestID});
+          });
+        } else {
+          value(eventData, socket);
+        }
+      });
     });
   }
 
