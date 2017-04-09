@@ -20,9 +20,9 @@ function bindClient(key) {
     let done = _.noop;
     let action = _.once(callback);
     const timeout = setTimeout(() => {
-      this[key].off(command, done);
+      this[key].off(eventName, done);
 
-      callback(null, new Error('[' + command + '][TIMEOUT]'));
+      callback(null, new Error('[' + eventName + '][TIMEOUT]'));
     }, this.config.timeout);
 
     done = (data) => {
