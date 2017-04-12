@@ -38,6 +38,31 @@ function bindClient(key) {
     this[key].on(eventName, done);
     this[key].emit(eventName, {data: eventData, __requestID: requestID});
   };
+
+  this[key].requestBy = ({identifier : value}, eventName, eventData, callback) => {
+    if(_.isUndefined(eventData[identifier])) throw new Error(identifier + 'is not property in ' + eventData);
+
+    let done = _.noop;
+    let action = _.once(callback);
+    const requestID = _.uniqueId(eventName);
+    const timeout = setTimeout(() => {
+      this[key].off(eventName, done);
+
+      callback(null, new Error('[' + eventName + '][TIMEOUT]'));
+    }, this.config.timeout);
+
+    done = (data) => {
+      if(data[identifier] !== value)
+        return;
+
+      this[key].off(eventName, done);
+      clearTimeout(timeout);
+      action(data);
+    };
+
+    this[key].on(eventName, done);
+    this[key].emit(eventName, eventData);
+  };
 }
 
 
