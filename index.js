@@ -39,11 +39,10 @@ function bindClient(key) {
     this[key].emit(eventName, {data: eventData, __requestID: requestID});
   };
 
-  this[key].requestBy = ({identifier : value}, eventName, eventData, callback) => {
-    if(_.isUndefined(eventData[identifier])) throw new Error(identifier + 'is not property in ' + eventData);
-
+  this[key].requestBy = (identifier, eventName, eventData, callback) => {
     let done = _.noop;
     let action = _.once(callback);
+    const value = eventData[identifier];
     const requestID = _.uniqueId(eventName);
     const timeout = setTimeout(() => {
       this[key].off(eventName, done);
