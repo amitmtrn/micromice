@@ -18,12 +18,12 @@ function bindClient(key) {
 
   this[key].request = (eventName, eventData, callback) => {
     let done = _.noop;
-    let action = _.once(callback);
+    const action = _.once(callback);
     const requestID = _.uniqueId(eventName);
     const timeout = setTimeout(() => {
       this[key].off(eventName, done);
 
-      callback(null, new Error('[' + eventName + '][TIMEOUT]'));
+      action(null, new Error('[' + eventName + '][TIMEOUT]'));
     }, this.config.timeout);
 
     done = ({data, __requestID}) => {
@@ -41,13 +41,13 @@ function bindClient(key) {
 
   this[key].requestBy = (identifier, eventName, eventData, callback) => {
     let done = _.noop;
-    let action = _.once(callback);
+    const action = _.once(callback);
     const value = eventData[identifier];
     const requestID = _.uniqueId(eventName);
     const timeout = setTimeout(() => {
       this[key].off(eventName, done);
 
-      callback(null, new Error('[' + eventName + '][TIMEOUT]'));
+      action(null, new Error('[' + eventName + '][TIMEOUT]'));
     }, this.config.timeout);
 
     done = (data) => {
