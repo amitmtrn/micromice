@@ -10,10 +10,22 @@ function bindClient(key) {
   /////////////////////////
 
   this[key].once = (eventName, callback) => {
-    this.ipc.of[key].on(eventName, function done(data) {
-      this.ipc.of[key].off(eventName, done);
-      callback(data);
-    }.bind(this));
+    let done = _.noop;
+    const action = _.once(callback);
+    const timeout = setTimeout(() => {
+      this[key].off(eventName, done);
+
+      action(null, new Error('[' + eventName + '][TIMEOUT]'));
+    }, this.config.timeout);
+
+    done = (data) => {
+      this[key].off(eventName, done);
+      clearTimeout(timeout);
+      action(data);
+    };
+
+    this[key].on(eventName, done);
+    this[key].emit(eventName, data);
   };
 
   this[key].request = (eventName, eventData, callback) => {
@@ -43,7 +55,6 @@ function bindClient(key) {
     let done = _.noop;
     const action = _.once(callback);
     const value = eventData[identifier];
-    const requestID = _.uniqueId(eventName);
     const timeout = setTimeout(() => {
       this[key].off(eventName, done);
 
