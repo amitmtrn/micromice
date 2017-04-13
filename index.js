@@ -25,7 +25,6 @@ function bindClient(key) {
     };
 
     this[key].on(eventName, done);
-    this[key].emit(eventName, data);
   };
 
   this[key].request = (eventName, eventData, callback) => {
