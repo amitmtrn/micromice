@@ -79,7 +79,7 @@ class MicroMice {
   constructor(config) {
     this.config = _.defaults(config, { timeout: 2000 });
     this.ipc = new ipc.IPC();
-    this.start = _.noop;
+    this.start = () => Promise.resolve();
     this.ipc.config = _.defaults(config, {
       id: _.uniqueId('service'),
       retry: 1500,
@@ -92,8 +92,9 @@ class MicroMice {
       this.emit = this.ipc.server.emit.bind(this.ipc.server);
       this.broadcast = this.ipc.server.broadcast.bind(this.ipc.server);
 
-      this.start();
-      this._bindEvents();
+      this.start().then(() => {
+        this._bindEvents();
+      });
     });
 
     this._bindServices();
