@@ -83,7 +83,8 @@ class MicroMice {
     this.ipc.config = _.defaults(config, {
       id: _.uniqueId('service'),
       retry: 1500,
-      silent: true
+      silent: true,
+      networkHost: config.host
     }, this.ipc.config);
 
     const serve = config.host ? this.ipc.serveNet.bind(this.ipc) : this.ipc.serve.bind(this.ipc);
