@@ -80,6 +80,7 @@ class MicroMice {
     this.config = _.defaults(config, { timeout: 2000 });
     this.ipc = new ipc.IPC();
     this.start = () => Promise.resolve();
+    this.ready = _.noop;
     this.ipc.config = _.defaults(config, {
       id: _.uniqueId('service'),
       retry: 1500,
@@ -100,6 +101,8 @@ class MicroMice {
 
     this._bindServices();
     this.ipc.server.start();
+
+    setTimeout(this.ready, 10);
   }
 
   _bindEvents() {
