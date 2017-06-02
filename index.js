@@ -6,19 +6,8 @@ const executor = require('./executor');
 const agregator = require('./agregator');
 const _ = require('lodash');
 
-// request priority reducer
-function requestReducer(newEventsList, currentEvent, index) {
-  if(currentEvent.eventId) {
-    newEventsList.unshift(currentEvent);
-  } else {
-    newEventsList.push(currentEvent);
-  }
-  
-  return newEventsList;
-}
-
 module.exports = function(config = {}) {
-  const reducers = [requestReducer];
+  const reducers = [];
   const middlewares = [];
   const events = {};
   const bson = new BSON();
@@ -49,21 +38,6 @@ module.exports = function(config = {}) {
     
     services[serviceName].socket = new net.Socket();
     services[serviceName].socket.connect(service.path);
-    
-    services[serviceName].request = (eventName, data, callback) => {
-      const eventId = _.uniqueId(eventName);
-      const serialized = bson.serialize({eventName, eventId, data, serviceName: config.name || ''});
-      const response = (data) => {
-        const deserialize = bson.deserialize(data);
-        
-        if(deserialize.eventId === eventId) {
-          callback(deserialize);
-          services[serviceName].socket.off('data', response);
-        }
-      }
-      services[serviceName].socket.on('data', response);
-      services[serviceName].socket.write(serialized);
-    };
     
     services[serviceName].emit = (eventName, data) => {
       const serialized = bson.serialize({eventName, data, serviceName: config.name || ''});
