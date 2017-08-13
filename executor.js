@@ -1,6 +1,7 @@
 const _ = require('lodash');
 
-module.exports = function(middlewares, e) {
+module.exports = function(e) {
+
   if(!e.eventName) 
     throw new Error(JSON.stringify(e) + 'is not event');
 

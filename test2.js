@@ -3,6 +3,7 @@ const config = require('./config.json');
 const app = micromice(config);
 
 app.on('connected', (e) => {
+  console.log('connected event sent');
   e.services.server.emit('test', {some:'data'});
 });
 
