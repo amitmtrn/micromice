@@ -1,0 +1,28 @@
+{
+  "name": "micromice2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "dependencies": {
+    "bson": "^1.0.4",
+    "commandqueuejs": "^1.0.0",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amitmtrn/micromice2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amitmtrn/micromice2/issues"
+  },
+  "homepage": "https://github.com/amitmtrn/micromice2#readme"
+}
