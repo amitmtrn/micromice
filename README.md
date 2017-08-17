@@ -1,5 +1,5 @@
 # MicroMice2
 
 ## TODO
-- [] recovery
-- [] tests
+- [ ] recovery
+- [ ] tests
