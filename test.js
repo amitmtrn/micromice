@@ -1,7 +1,7 @@
 const micromice = require('./index');
 const app = micromice();
 
-app.once('test', (e) => {
+app.on('test', (e) => {
   console.log(e);
   app.broadcast('hello', {world: 42});
 })

@@ -5,7 +5,7 @@ const BSON = require('bson');
 const executor = require('./executor');
 const agregator = require('./agregator');
 const _ = require('lodash');
-const bson = new BSON();
+const bson = new BSON(); // NOTE: not sure that bson is the be option here since sometimes bson are bigger then json files
 
 module.exports = function(config = {}) {
   const reducers = []; // application reducers
@@ -23,14 +23,13 @@ module.exports = function(config = {}) {
       commandQueue.push(bson.deserialize(data));
     });
 
-    socket.on('end', function () { // remove socket when socket close
-      serviceSocket = null;
-      console.log('socket disconnected');
+    socket.on('end', function () { // a device has disconnectd from the socket
     });
 
   });
 
   // throw service errors
+  // TODO: add more sufisticated error mechanisem
   server.on('error', (err) => {
     throw err;
   });
@@ -42,7 +41,6 @@ module.exports = function(config = {}) {
     
     // create new socket of the connected service
     services[serviceName].socket = new net.Socket();
-    console.log('connected to ', service.path);
     services[serviceName].socket.connect(service.path); // connect to the service via socket
     
     // emit method for services (emit to service)
