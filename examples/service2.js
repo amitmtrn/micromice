@@ -1,16 +1,16 @@
-const micromice = require('./index');
+const micromice = require('../index');
 const config = require('./config.json');
 const app = micromice(config);
 
 app.on('connected', (e) => {
   console.log('connected event sent');
-  e.services.server.emit('test', {some:'data'});
+  e.services.service1.emit('test', {some:'data'});
 });
 
-app.on('server:hello', (e) => {
+app.on('service1:hello', (e) => {
   console.log(e);
 });
 
-app.listen('./test2.lock', () => {
+app.listen('./service2.lock', () => {
   console.log('connected');
 });

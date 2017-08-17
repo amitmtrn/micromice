@@ -1,8 +1,0 @@
-[{
-  "name": "server",
-  "path": "./server.lock",
-  "listenTo": ["hello", "world"]
-}, {
-  "name": "other",
-  "path": "./other.lock"
-}]

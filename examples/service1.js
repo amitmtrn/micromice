@@ -1,4 +1,4 @@
-const micromice = require('./index');
+const micromice = require('../index');
 const app = micromice();
 
 app.on('test', (e) => {
@@ -10,4 +10,4 @@ app.on('connected', (e) => {
   console.log(e);
 })
 
-app.listen('./server.lock');
+app.listen('./service1.lock');
