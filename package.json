@@ -1,11 +1,17 @@
 {
   "name": "micromice2",
-  "version": "1.0.0",
-  "description": "",
+  "version": "2.0.0",
+  "description": "A lightweight framework for micro services in node js",
   "main": "index.js",
   "directories": {
     "example": "examples"
   },
+  "keywords": [
+    "microservices",
+    "service",
+    "micro service",
+    "ipc"
+  ],
   "dependencies": {
     "bson": "^1.0.4",
     "commandqueuejs": "^1.0.0",
@@ -19,8 +25,8 @@
     "type": "git",
     "url": "git+https://github.com/amitmtrn/micromice2.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Amit Choukroun",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/amitmtrn/micromice2/issues"
   },
