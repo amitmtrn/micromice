@@ -1,3 +1,6 @@
 # MicroMice2
 
-## deprecated
+## TODO
+- [ ] recovery
+- [ ] tests
+- [ ] docs
