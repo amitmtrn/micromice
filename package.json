@@ -1,5 +1,5 @@
 {
-  "name": "micromice2",
+  "name": "micromice",
   "version": "2.0.3",
   "description": "A lightweight framework for micro services in node js",
   "main": "index.js",
