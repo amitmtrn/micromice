@@ -1,148 +1,153 @@
-const ipc = require('node-ipc');
+const net = require('net');
+const fs = require('fs');
+const CommandQueue = require('commandqueuejs');
+const BSON = require('bson');
+const executor = require('./executor');
+const agregator = require('./agregator');
 const _ = require('lodash');
+const bson = new BSON(); // NOTE: not sure that bson is the be option here since sometimes bson are bigger then json files
 
-function bindClient(key) {
+module.exports = function(config = {}) {
+  const reducers = []; // application reducers
+  const events = {}; // event to be executed when activated by command queue
+  // the on which hold all the recived commands
+  const commandQueue = new CommandQueue({ executor: executor.bind(events), timing: config.timing || 200, agregator: agregator.bind(reducers) });
+  const services = {}; // connected services
+  let serviceSocket = null;
 
-  this[key] = this.ipc.of[key];
+  // the micro service server
+  const server = net.createServer((socket) => {
+    serviceSocket = socket;
 
-  /////////////////////////
-  // extra client events //
-  /////////////////////////
-
-  this[key].once = (eventName, callback) => {
-    let done = _.noop;
-    const action = _.once(callback);
-    const timeout = setTimeout(() => {
-      this[key].off(eventName, done);
-
-      action(null, new Error('[' + eventName + '][TIMEOUT]'));
-    }, this.config.timeout);
-
-    done = (data) => {
-      this[key].off(eventName, done);
-      clearTimeout(timeout);
-      action(data);
-    };
-
-    this[key].on(eventName, done);
-  };
-
-  this[key].request = (eventName, eventData, callback) => {
-    let done = _.noop;
-    const action = _.once(callback);
-    const requestID = _.uniqueId(eventName);
-    const timeout = setTimeout(() => {
-      this[key].off(eventName, done);
-
-      action(null, new Error('[' + eventName + '][TIMEOUT]'));
-    }, this.config.timeout);
-
-    done = ({data, __requestID}) => {
-      if(__requestID !== requestID)
-        return;
-
-      this[key].off(eventName, done);
-      clearTimeout(timeout);
-      action(data);
-    };
-
-    this[key].on(eventName, done);
-    this[key].emit(eventName, {data: eventData, __requestID: requestID});
-  };
-
-  this[key].requestBy = (identifier, eventName, eventData, callback) => {
-    let done = _.noop;
-    const action = _.once(callback);
-    const value = eventData[identifier];
-    const timeout = setTimeout(() => {
-      this[key].off(eventName, done);
-
-      action(null, new Error('[' + eventName + '][TIMEOUT]'));
-    }, this.config.timeout);
-
-    done = (data) => {
-      if(data[identifier] !== value)
-        return;
-
-      this[key].off(eventName, done);
-      clearTimeout(timeout);
-      action(data);
-    };
-
-    this[key].on(eventName, done);
-    this[key].emit(eventName, eventData);
-  };
-}
-
-
-class MicroMice {
-  constructor(config) {
-    this.config = _.defaults(config, { timeout: 2000 });
-    this.ipc = new ipc.IPC();
-    this.ready = _.noop;
-    this.start = () => Promise.resolve();
-    this.ipc.config = _.defaults(config, {
-      id: _.uniqueId('service'),
-      retry: 1500,
-      silent: true,
-      networkHost: config.host
-    }, this.ipc.config);
-
-    const serve = config.host ? this.ipc.serveNet.bind(this.ipc) : this.ipc.serve.bind(this.ipc);
-
-    serve(() => {
-      this.emit = this.ipc.server.emit.bind(this.ipc.server);
-      this.broadcast = this.ipc.server.broadcast.bind(this.ipc.server);
-
-      this.start().then(() => {
-        this._bindEvents();
-      });
+    socket.on('data', (data) => { // add events to command queue
+      commandQueue.push(bson.deserialize(data));
     });
 
-    this._bindServices();
-    this.ipc.server.start();
+    socket.on('end', function () { // a device has disconnectd from the socket
+    });
 
-    setTimeout(() => this.ready(), 10);
-  }
+  });
 
-  _bindEvents() {
-    const events = this.events ? this.events() : null;
+  // throw service errors
+  // TODO: add more sufisticated error mechanisem
+  server.on('error', (err) => {
+    throw err;
+  });
 
-    if(!_.isPlainObject(events)) return;
+   // registering services
+  _.each(config.services, (service) => {
+    const serviceName = service.name;
+    services[serviceName] = {};
+    
+    // create new socket of the connected service
+    services[serviceName].socket = new net.Socket();
+    services[serviceName].socket.connect(service.path); // connect to the service via socket
+    
+    // emit method for services (emit to service)
+    services[serviceName].emit = (eventName, data) => {
+      // data sent through bson
+      const serialized = bson.serialize({eventName, data, serviceName: config.name || ''});
+      // write to service socket the new data
+      services[serviceName].socket.write(serialized);
+    }
 
-    _.forEach(events, (value, key) => {
-      this.ipc.server.on(key, (eventData, socket) => {
-        const __requestID = eventData.__requestID;
+    // reactive event listening
+    if(_.isArray(service.listenTo))
+      // listen to events on service socket
+      services[serviceName].socket.on('data', (data) => {
+        const e = bson.deserialize(data); // data is bson so need to parse
+        e.services = services;
 
-        if(__requestID) { // is a request
-          value.call(this, eventData.data, socket, (data) => {
-            this.emit(socket, key, {data, __requestID});
-          });
-        } else {
-          value.call(this, eventData, socket);
+        if(service.listenTo.indexOf(e.eventName) > -1) { // if event is beening listend
+          e.eventName = serviceName + ':' + e.eventName; // show it in the api as serviceName:eventName
+          commandQueue.push(e); // and push the event to the command queue
         }
       });
-    });
-  }
+  });
 
-  _bindServices() {
-    const services = this.services ? this.services() : null;
+  return {
+    /**
+     * add reducer to the app
+     */
+    use(reducer) {
+      reducers.push(reducer);
+    },
+    
+    /**
+     * when recive event
+     */
+    on(eventName, action) {
+      if (!_.isArray(events[eventName]))
+        events[eventName] = [];
 
-    if(!_.isPlainObject(services) && !_.isArray(services)) return;
+      events[eventName].push(action);
+    },
 
-    _.forEach(services, (value, key) => {
+    /**
+     * remove event listener
+     */
+    off(eventName, action) {
+      if (!_.isArray(events[eventName]))
+        return false;
 
-      if(_.isPlainObject(value))
-        return this.ipc.connectToNet(key, value.host, value.port, bindClient.bind(this, key));
+      if(action === '*') {
+        delete events[eventName];
 
-      if(_.isArray(services))
-        return this.ipc.connectTo(value, bindClient.bind(this, value));
+        return true;
+      }
 
-      return this.ipc.connectTo(key, bindClient.bind(this, key));
-    });
+      const index = events[eventName].indexOf(action);
 
-  }
+      if (index > -1) {
+        array.splice(index, 1);
+        return true;
+      }
 
+      return false;
+    },
+    
+    /**
+     * execute event once
+     */
+    once(eventName, action) {
+      const oneFunction = _.once((e) => {
+        action(e);
+
+        this.off(oneFunction);
+      });
+      
+      this.on(eventName, oneFunction);
+    },
+    
+    /**
+     * send event to all those how listen
+     */
+    broadcast(eventName, data) {
+      data.eventName = eventName; // need the event name as part of the data
+      
+      const serialized = bson.serialize(data);
+      serviceSocket.write(serialized);
+    },
+
+    /**
+     * open port / unix socket
+     */
+    listen(path, callback) {
+      if(!_.isFunction(callback))
+        callback = _.noop;
+
+      // remove socket file if exists
+      if (fs.existsSync(path))
+        fs.unlinkSync(path);
+
+      server.listen(path, (data) => {
+        if(!_.isObject(data)) 
+          data = {};
+
+        callback(data);
+        // send connected event
+        commandQueue.push({eventName: 'connected', data, services});
+      });
+    }
+  };
 }
-
-module.exports = MicroMice;

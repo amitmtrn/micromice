@@ -1,0 +1,7 @@
+{
+  "services": [{
+    "name": "service1",
+    "path": "./service1.lock",
+    "listenTo": ["hello", "world"]
+  }]
+}
