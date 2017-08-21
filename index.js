@@ -13,7 +13,7 @@ module.exports = function(config = {}) {
   // the on which hold all the recived commands
   const commandQueue = new CommandQueue({ executor: executor.bind(events), timing: config.timing || 200, agregator: agregator.bind(reducers) });
   const services = {}; // connected services
-  let serviceSocket = null;
+  let serviceSocket = new net.Socket(); // initialy socket to self
 
   // the micro service server
   const server = net.createServer((socket) => {
@@ -23,26 +23,30 @@ module.exports = function(config = {}) {
       commandQueue.push(bson.deserialize(data));
     });
 
-    socket.on('end', function () { // a device has disconnectd from the socket
+    socket.on('end', function (data) { // a device has disconnectd from the socket
+      commandQueue.push({eventName: 'service-disconnected', data});
     });
 
   });
 
+  server.on('connection', (data) => {
+    commandQueue.push({eventName: 'service-connected', data});
+  });
+
   // throw service errors
-  // TODO: add more sufisticated error mechanisem
   server.on('error', (err) => {
-    throw err;
+    commandQueue.push({eventName: 'error', err});
   });
 
    // registering services
   _.each(config.services, (service) => {
     const serviceName = service.name;
     services[serviceName] = {};
-    
+
     // create new socket of the connected service
     services[serviceName].socket = new net.Socket();
     services[serviceName].socket.connect(service.path); // connect to the service via socket
-    
+
     // emit method for services (emit to service)
     services[serviceName].emit = (eventName, data) => {
       // data sent through bson
@@ -72,7 +76,7 @@ module.exports = function(config = {}) {
     use(reducer) {
       reducers.push(reducer);
     },
-    
+
     /**
      * when recive event
      */
@@ -105,7 +109,7 @@ module.exports = function(config = {}) {
 
       return false;
     },
-    
+
     /**
      * execute event once
      */
@@ -115,16 +119,16 @@ module.exports = function(config = {}) {
 
         this.off(oneFunction);
       });
-      
+
       this.on(eventName, oneFunction);
     },
-    
+
     /**
      * send event to all those how listen
      */
     broadcast(eventName, data) {
       data.eventName = eventName; // need the event name as part of the data
-      
+
       const serialized = bson.serialize(data);
       serviceSocket.write(serialized);
     },
@@ -141,7 +145,9 @@ module.exports = function(config = {}) {
         fs.unlinkSync(path);
 
       server.listen(path, (data) => {
-        if(!_.isObject(data)) 
+        serviceSocket.connect(path); // have to connect to self in order to make sure that socket is created
+
+        if(!_.isObject(data))
           data = {};
 
         callback(data);
